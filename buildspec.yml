@@ -6,9 +6,9 @@ phases:
       - echo "Starting installation phase..."
       - yum update -y
       - yum install -y docker
-      - sudo usermod -aG docker ec2-user
-      - sudo service docker start
-      - sudo service docker status
+      - usermod -aG docker ec2-user
+      - service docker start
+      - service docker status
       - echo "Installation completed."
 
   pre_build:

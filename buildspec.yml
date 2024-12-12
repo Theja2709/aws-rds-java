@@ -6,6 +6,7 @@ phases:
       - echo "Starting installation phase..."
       - yum update -y
       - yum install -y docker
+      - docker --version
       - echo "Installation completed."
 
   pre_build:

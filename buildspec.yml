@@ -6,8 +6,8 @@ phases:
       - echo "Starting installation phase..."
       - yum update -y
       - yum install -y docker
-      - service docker start
-      - service docker status
+      - systemctl is-active --quiet docker || systemctl start docker
+      - systemctl status docker
       - echo "Installation completed."
 
   pre_build:

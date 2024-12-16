@@ -6,6 +6,8 @@ phases:
       - echo "Starting installation phase..."
       - yum update -y
       - yum install -y docker
+      - yum install git -y
+      - git --version
       - docker --version
       - echo "Installation completed."
 

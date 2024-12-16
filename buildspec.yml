@@ -6,23 +6,15 @@ phases:
       - echo "Starting installation phase..."
       - yum update -y
       - yum install -y docker
-      - yum install git -y
-      - git --version
       - docker --version
       - echo "Installation completed."
 
   pre_build:
     commands:
       - echo "Pre-build phase started..."
-      # Check if the environment variables are set
-      - echo "Checking environment variables..."
-      - echo "AWS_REGION: $AWS_REGION"
-      - echo "AWS_ACCOUNT_ID: $AWS_ACCOUNT_ID"
-      - if [ -z "$AWS_REGION" ]; then echo "AWS_REGION is not set"; exit 1; fi
-      - if [ -z "$AWS_ACCOUNT_ID" ]; then echo "AWS_ACCOUNT_ID is not set"; exit 1; fi
       - echo "Logging in to Amazon ECR..."
       - aws sts get-caller-identity
-      - aws ecr get-login-password --region $AWS_REGION --debug | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
       - echo "Cloning the GitHub repository..."
       - git clone https://github.com/Theja2709/aws-rds-java.git
       - echo "Navigating to the application directory..."

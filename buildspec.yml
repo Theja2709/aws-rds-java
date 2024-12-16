@@ -1,4 +1,5 @@
 version: 0.2
+
 phases:
   install:
     run-as: root
@@ -6,13 +7,13 @@ phases:
     commands:
       - echo Updating latest updates in linux...
       - yum update -y
-    finally:
       - docker --version      
       - aws configure set aws_access_key_id $access_key 
       - aws configure set aws_secret_access_key $secret_key 
       - aws configure set region $aws_region
       - aws configure get region
-      - echo AWS Access Key,Secret Key and Region is configured
+      - echo AWS Access Key, Secret Key, and Region are configured
+
   pre_build:
     run-as: root
     on-failure: ABORT
@@ -20,6 +21,7 @@ phases:
       - echo Entered the pre_build phase...
       - aws ecr get-login-password --region $aws_region | docker login --username AWS --password-stdin $container_registry
       - echo ECR Docker Login has successful...
+
   build:
     run-as: root
     on-failure: ABORT
@@ -35,8 +37,8 @@ phases:
       - docker images
       - docker push $container_registry/$ecr_repo:$env_image_tag$CODEBUILD_BUILD_NUMBER
       - echo $container_registry/$ecr_repo:$env_image_tag$CODEBUILD_BUILD_NUMBER
-    finally:
       - echo Build successfully completed
+
   post_build:
     run-as: root
     on-failure: ABORT
@@ -49,9 +51,12 @@ phases:
       - pwd
       - cd $git_path
       - sed -i "s|$container_registry/$ecr_repo:$env_image_tag$(($CODEBUILD_BUILD_NUMBER-1))|$container_registry/$ecr_repo:$env_image_tag$CODEBUILD_BUILD_NUMBER|g" $deployment_file
-    finally:
       - echo Pushing code to Code Commit Repository
       - git add .
       - git commit -am "updating deployment yaml file"
       - git push origin main
-      - echo Finished pushing to GIT Repositoryersion: 0.2
+      - echo Finished pushing to GIT Repository
+
+artifacts:
+  files:
+    - "**/*"

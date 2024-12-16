@@ -14,7 +14,7 @@ phases:
       - echo "Pre-build phase started..."
       - echo "Logging in to Amazon ECR..."
       - aws sts get-caller-identity
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 061039798183.dkr.ecr.us-east-1.amazonaws.com
       - echo "Cloning the GitHub repository..."
       - git clone https://github.com/Theja2709/aws-rds-java.git
       - echo "Navigating to the application directory..."
@@ -27,8 +27,9 @@ phases:
       - echo "Building the application using Maven..."
       - mvn clean install
       - echo "Creating a Docker image..."
-      - docker build -t $IMAGE_REPO_NAME:latest .
-      - docker tag $IMAGE_REPO_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest
+      - docker build -t javaweb-repo .
+      - docker tag javaweb-repo:latest 061039798183.dkr.ecr.us-east-1.amazonaws.com/javaweb-repo:latest
+      - docker push 061039798183.dkr.ecr.us-east-1.amazonaws.com/javaweb-repo:latest
       - echo "Build phase completed."
 
   post_build:

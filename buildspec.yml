@@ -4,25 +4,25 @@ phases:
   install:
     commands:
       - echo "Starting installation phase..."
-      - set -e # Exit immediately if any command fails
-      - if ! command -v docker &> /dev/null; then
-          echo "Docker not found. Installing Docker...";
-          yum update -y;
-          yum install -y docker;
-          service docker start;
-        else
-          echo "Docker is already installed.";
-        fi
+      - yum update -y
+      - yum install -y docker
       - docker --version
-      - echo "Installation phase completed."
+      - echo "Installation completed."
 
   pre_build:
     commands:
       - echo "Pre-build phase started..."
+      # Check if the environment variables are set
+      - echo "Checking environment variables..."
+      - echo "AWS_REGION: $AWS_REGION"
+      - echo "AWS_ACCOUNT_ID: $AWS_ACCOUNT_ID"
+      - if [ -z "$AWS_REGION" ]; then echo "AWS_REGION is not set"; exit 1; fi
+      - if [ -z "$AWS_ACCOUNT_ID" ]; then echo "AWS_ACCOUNT_ID is not set"; exit 1; fi
       - echo "Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - aws sts get-caller-identity
+      - aws ecr get-login-password --region $AWS_REGION --debug | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
       - echo "Cloning the GitHub repository..."
-      - git clone $GITHUB_REPO_URL
+      - git clone https://github.com/Theja2709/aws-rds-java.git
       - echo "Navigating to the application directory..."
       - cd aws-rds-java
       - echo "Pre-build phase completed."
@@ -31,7 +31,6 @@ phases:
     commands:
       - echo "Build phase started..."
       - echo "Building the application using Maven..."
-      - cd aws-rds-java # Ensure the directory is correct
       - mvn clean install
       - echo "Creating a Docker image..."
       - docker build -t $IMAGE_REPO_NAME:latest .
@@ -47,12 +46,12 @@ phases:
 
 artifacts:
   files:
-    - '**/*' # Include all files
-  base-directory: target/LoginWebApp # Adjust based on your Maven target output
+    - '**/*' # All files (optional, adjust as needed)
+  base-directory: target/LoginWebApp # Target directory for application output
 
 env:
   variables:
     AWS_REGION: "us-east-1" # Change to your AWS region
     AWS_ACCOUNT_ID: "061039798183" # Change to your AWS Account ID
     IMAGE_REPO_NAME: "javaweb-repo" # Change to your ECR repository name
-    GITHUB_REPO_URL: "https://github.com/Theja2709/aws-rds-java.git" # Your GitHub repo URL
+    GITHUB_REPO_URL: "https://github.com/Theja2709/aws-rds-java.git" # Replace with your GitHub repo URL

@@ -38,12 +38,13 @@ phases:
 
 artifacts:
   files:
-    - '**/*' # All files (optional, adjust as needed)
-  base-directory: target/LoginWebApp # Ensure this path is correct
-
+    - '**/*'
+  
 env:
   variables:
-    AWS_REGION: "us-east-1" # Change to your AWS region
-    AWS_ACCOUNT_ID: "061039798183.dkr.ecr.us-east-1" # Change to your AWS Account ID
-    IMAGE_REPO_NAME: "javaweb-repo" # Change to your ECR repository name
-    GITHUB_REPO_URL: "https://github.com/Theja2709/aws-rds-java.git" # Replace with your GitHub repo URL
+    AWS_REGION: "us-east-1"
+    AWS_ACCOUNT_ID: "061039798183"
+    IMAGE_REPO_NAME: "javaweb-repo"
+    GITHUB_REPO_URL: "https://github.com/Theja2709/aws-rds-java.git"
+    AWS_ACCESS_KEY_ID: "AKIAQ4NSBM6TRS65UMNX"  # Replace with your actual AWS Access Key
+   

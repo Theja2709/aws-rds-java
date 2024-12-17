@@ -2,55 +2,48 @@ version: 0.2
 
 phases:
   install:
-    run-as: root
-    on-failure: ABORT
     commands:
-      - echo Updating latest updates in Linux...
+      - echo "Starting installation phase..."
       - yum update -y
-      - docker --version
-      - echo "Using IAM Role credentials for AWS access"
-      - aws sts get-caller-identity
-      - aws configure get region
-      - echo AWS credentials and region are configured
+      - yum install -y docker
+      - echo "Installation completed."
 
   pre_build:
-    run-as: root
-    on-failure: ABORT
     commands:
-      - echo Entered the pre_build phase...
-      - aws ecr get-login-password --region $aws_region | docker login --username AWS --password-stdin $container_registry
-      - echo ECR Docker Login successful...
+      - echo "Pre-build phase started..."
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - echo "Cloning the GitHub repository..."
+      - git clone https://github.com/Theja2709/aws-rds-java.git
+      - echo "Navigating to the application directory..."
+      - cd aws-rds-java
+      - echo "Pre-build phase completed."
 
   build:
-    run-as: root
-    on-failure: ABORT
     commands:
-      - echo Entered the build phase...
-      - echo Build started on `date`
-      - echo CodeBuild build number: $CODEBUILD_BUILD_NUMBER
-      - pwd
-      - ls -la
-      - echo Cloning application repository...
-      - git clone https://github.com/Theja2709/aws-rds-java.git javaweb-repo
-      - cd javaweb-repo
-      - docker build -t $container_registry/$ecr_repo:$env_image_tag$CODEBUILD_BUILD_NUMBER .
-      - docker images
-      - docker push $container_registry/$ecr_repo:$env_image_tag$CODEBUILD_BUILD_NUMBER
-      - echo Build completed successfully
+      - echo "Build phase started..."
+      - echo "Building the application using Maven..."
+      - mvn clean install
+      - echo "Creating a Docker image..."
+      - docker build -t $IMAGE_REPO_NAME:latest .
+      - docker tag $IMAGE_REPO_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest
+      - echo "Build phase completed."
 
   post_build:
-    run-as: root
-    on-failure: ABORT
     commands:
-      - echo Updating GIT Repository...
-      - git clone -b master https://github.com/Theja2709/aws-rds-java.git /root/aws-rds-java
-      - cd $git_path
-      - sed -i "s|$container_registry/$ecr_repo:$env_image_tag$(($CODEBUILD_BUILD_NUMBER-1))|$container_registry/$ecr_repo:$env_image_tag$CODEBUILD_BUILD_NUMBER|g" $deployment_file
-      - git add .
-      - git commit -am "Updating deployment YAML file"
-      - git push origin main
-      - echo Finished pushing to GIT Repository.
+      - echo "Post-build phase started..."
+      - echo "Pushing Docker image to ECR..."
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest
+      - echo "Post-build phase completed."
 
 artifacts:
   files:
-    - "**/*"
+    - '**/*' # All files (optional, adjust as needed)
+  base-directory: target/LoginWebApp # Ensure this path is correct
+
+env:
+  variables:
+    AWS_REGION: "us-east-1" # Change to your AWS region
+    AWS_ACCOUNT_ID: "061039798183" # Change to your AWS Account ID
+    IMAGE_REPO_NAME: "javaweb-repo" # Change to your ECR repository name
+    GITHUB_REPO_URL: "https://github.com/Theja2709/aws-rds-java.git" # Replace with your GitHub repo URL

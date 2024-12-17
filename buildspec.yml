@@ -5,14 +5,13 @@ phases:
     run-as: root
     on-failure: ABORT
     commands:
-      - echo Updating latest updates in linux...
+      - echo Updating latest updates in Linux...
       - yum update -y
-      - docker --version      
-      - aws configure set aws_access_key_id $access_key 
-      - aws configure set aws_secret_access_key $secret_key 
-      - aws configure set region $aws_region
+      - docker --version
+      - echo "Using IAM Role credentials for AWS access"
+      - aws sts get-caller-identity
       - aws configure get region
-      - echo AWS Access Key, Secret Key, and Region are configured
+      - echo AWS credentials and region are configured
 
   pre_build:
     run-as: root
@@ -20,7 +19,7 @@ phases:
     commands:
       - echo Entered the pre_build phase...
       - aws ecr get-login-password --region $aws_region | docker login --username AWS --password-stdin $container_registry
-      - echo ECR Docker Login has successful...
+      - echo ECR Docker Login successful...
 
   build:
     run-as: root
@@ -28,34 +27,29 @@ phases:
     commands:
       - echo Entered the build phase...
       - echo Build started on `date`
-      - echo $CODEBUILD_BUILD_NUMBER
-      - echo $buildnumber
-      - echo $CODEBUILD_BUILD_SUCCEEDING
+      - echo CodeBuild build number: $CODEBUILD_BUILD_NUMBER
       - pwd
       - ls -la
-      - docker build -t $container_registry/$ecr_repo:$env_image_tag$CODEBUILD_BUILD_NUMBER ./javaweb-repo
+      - echo Cloning application repository...
+      - git clone https://github.com/Theja2709/aws-rds-java.git javaweb-repo
+      - cd javaweb-repo
+      - docker build -t $container_registry/$ecr_repo:$env_image_tag$CODEBUILD_BUILD_NUMBER .
       - docker images
       - docker push $container_registry/$ecr_repo:$env_image_tag$CODEBUILD_BUILD_NUMBER
-      - echo $container_registry/$ecr_repo:$env_image_tag$CODEBUILD_BUILD_NUMBER
-      - echo Build successfully completed
+      - echo Build completed successfully
 
   post_build:
     run-as: root
     on-failure: ABORT
     commands:
-      - echo "Updating GIT Repository"
-      - echo $(($CODEBUILD_BUILD_NUMBER-1))
-      - pwd
+      - echo Updating GIT Repository...
       - git clone -b master https://github.com/Theja2709/aws-rds-java.git /root/aws-rds-java
-      - cd
-      - pwd
       - cd $git_path
       - sed -i "s|$container_registry/$ecr_repo:$env_image_tag$(($CODEBUILD_BUILD_NUMBER-1))|$container_registry/$ecr_repo:$env_image_tag$CODEBUILD_BUILD_NUMBER|g" $deployment_file
-      - echo Pushing code to Code Commit Repository
       - git add .
-      - git commit -am "updating deployment yaml file"
+      - git commit -am "Updating deployment YAML file"
       - git push origin main
-      - echo Finished pushing to GIT Repository
+      - echo Finished pushing to GIT Repository.
 
 artifacts:
   files:

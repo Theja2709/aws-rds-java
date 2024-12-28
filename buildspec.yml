@@ -11,6 +11,10 @@ phases:
   pre_build:
     commands:
       - echo "Pre-build phase started..."
+      - echo "configure aws cli"
+      - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+      - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+      - aws configure set region $AWS_REGION
       - echo "Logging in to Amazon ECR..."
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
       - echo "Cloning the GitHub repository..."
@@ -39,12 +43,3 @@ phases:
 artifacts:
   files:
     - '**/*'
-  
-env:
-  variables:
-    AWS_REGION: "us-east-1"
-    AWS_ACCOUNT_ID: "061039798183"
-    IMAGE_REPO_NAME: "javaweb-repo"
-    GITHUB_REPO_URL: "https://github.com/Theja2709/aws-rds-java.git"
-    AWS_ACCESS_KEY_ID: "AKIAQ4NSBM6TRS65UMNX"  # Replace with your actual AWS Access Key
-   
